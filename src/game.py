@@ -1,92 +1,66 @@
 import pygame
 
-from piece import Piece
+from button import Button
 
 
 class Game:
+    """
+    The game class. which will launch the game with specific parameters.
+    By default, the game will use a 8x8 grid.
+    """
+
     def __init__(self):
-        self.board = []
         self.screen = None
-        self.clock = None
-        self.running = True
-        self.piece_image = pygame.image.load("assets/piece.png")
-        self.mouse_image = pygame.image.load("assets/mouse.png")
-        self.mouse_image = pygame.transform.scale(self.mouse_image, (64, 64))
-        self.offset_x = 0
-        self.offset_y = 0
-        self.margin_x = 70
-        self.margin_y = 60
-        self.player_turn = 1
-
-    def start_game(self):
-        self.screen = pygame.display.set_mode((1024, 720), pygame.RESIZABLE)
-        self.offset_x = (self.screen.get_width() - 560) / 2
-        self.offset_y = (self.screen.get_height() - 560) / 2
         self.clock = pygame.time.Clock()
-        self.construct_board()
 
-    def construct_board(self):
-        for row in range(8):
-            self.board.append([])
-            for col in range(8):
-                if row % 2 == 0:
-                    self.board[row].append(Piece(
-                        0, col * self.margin_x + self.offset_x, row * self.margin_y + self.offset_y))
-                elif row % 2 == 1:
-                    self.board[row].append(Piece(
-                        0, col * self.margin_x + int(self.margin_x / 2) + self.offset_x,
-                           row * self.margin_y + self.offset_y))
-
-        self.board[0][0].set_value(2)
-
-    def draw_board(self):
-        for row in range(8):
-            for col in range(8):
-                if self.board[row][col].value == 0:
-                    self.screen.blit(
-                        self.piece_image, (self.board[row][col].x, self.board[row][col].y))
-                if self.board[row][col].value == 2:
-                    self.screen.blit(
-                        self.mouse_image, (self.board[row][col].x, self.board[row][col].y))
-
-    def make_move(self, event_list):
-        if self.player_turn == 1:
-            for event in event_list:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    pos = pygame.mouse.get_pos()
-                    min_dist = 100000
-                    min_row = -1
-                    min_col = -1
-                    for row in range(8):
-                        for col in range(8):
-                            if self.board[row][col].value == 0:
-                                dist = ((pos[0] - (self.board[row][col].x + 16)) ** 2 +
-                                        (pos[1] - (self.board[row][col].y + 16)) ** 2) ** 0.5
-                                if dist < min_dist:
-                                    min_dist = dist
-                                    min_row = row
-                                    min_col = col
-                    self.board[min_row][min_col].set_value(1)
-                    self.player_turn = 1
-        elif self.player_turn == 2:
-            pass
-
-    def run_game(self):
+    def initialize_game(self):
+        """
+        Initializes the game with the configuration defined in constructor.
+        :return: None
+        """
+        self.screen = pygame.display.set_mode((1024, 720), pygame.RESIZABLE)
         pygame.init()
+        pygame.display.set_caption("Trap The Mouse")
 
-        while self.running:
-            self.screen.fill(pygame.Color(255, 255, 255))
+    def main_menu(self):
+        """
+        The main menu for the game. TODO CONTINUE
+        :return:
+        """
+        button_start_game = Button(self.screen, 50, 400, 200, 100, "Start Game",
+                                   pygame.font.SysFont("Arial", 20), True, False)
+        button_quit = Button(self.screen, 50, 550, 200, 100, "Quit",
+                             pygame.font.SysFont("Arial", 20), True, False)
 
-            event_list = pygame.event.get()
-            for event in event_list:
+        menu_buttons = [button_start_game, button_quit]
+
+        while True:
+            mouse_pos = pygame.mouse.get_pos()
+            events = pygame.event.get()
+
+            self.screen.fill((68, 117, 28))
+
+            for button in menu_buttons:
+                button.draw()
+                button.check_hover(mouse_pos[0], mouse_pos[1])
+
+            # Check if the mouse is on the button
+            for event in events:
                 if event.type == pygame.QUIT:
-                    self.running = False
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if button_start_game.check_click(mouse_pos[0], mouse_pos[1]):
+                        self.start_local_game()
+                    if button_quit.check_click(mouse_pos[0], mouse_pos[1]):
+                        pygame.quit()
+                        quit()
 
-            self.make_move(event_list)
-
-            self.draw_board()
-            pygame.display.flip()
+            pygame.display.update()
             self.clock.tick(60)
 
-    def verify_win(self):
-        pass
+    def start_local_game(self):
+        """
+        Start a local game with the default configuration.
+        :return: None
+        """

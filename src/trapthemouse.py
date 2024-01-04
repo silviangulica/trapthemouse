@@ -2,5 +2,5 @@ from game import Game
 
 game = Game()
 
-game.start_game()
-game.run_game()
+game.initialize_game()
+game.main_menu()
