@@ -1,6 +1,7 @@
 import pygame
 
 from button import Button
+from tableplayer import TablePlayer
 
 
 class Game:
@@ -64,3 +65,33 @@ class Game:
         Start a local game with the default configuration.
         :return: None
         """
+        # When changing the windows, the cursor need to be reset
+        pygame.mouse.set_cursor(*pygame.cursors.arrow)
+
+        tableplayer = TablePlayer(self.screen, 8, 9)
+
+        TABLE_PLAYER = True
+        MOUSE_PLAYER = False
+        player_to_move = TABLE_PLAYER
+
+        while True:
+            mouse_pos = pygame.mouse.get_pos()
+            events = pygame.event.get()
+
+            self.screen.fill((255, 255, 255))
+
+            tableplayer.draw()
+
+            for event in events:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if player_to_move:
+                        tableplayer.make_move(mouse_pos[0], mouse_pos[1])
+                        player_to_move = TABLE_PLAYER
+                    else:
+                        pass
+
+            pygame.display.update()
+            self.clock.tick(60)
