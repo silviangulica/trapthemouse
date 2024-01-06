@@ -1,4 +1,5 @@
 from piece import Piece
+import random
 
 
 class TablePlayer:
@@ -6,7 +7,8 @@ class TablePlayer:
         self.height = height
         self.width = width
         self.screen = screen
-        self.pieces = [[None for _ in range(width)] for _ in range(height)]
+        self.pieces = [[Piece(0, 0, 0, "assets/piece.png")
+                        for _ in range(width)] for _ in range(height)]
 
     def draw(self):
         """
@@ -22,20 +24,12 @@ class TablePlayer:
 
         for i in range(self.height):
             for j in range(self.width):
-                if self.pieces[i][j] is not None:
-                    if i % 2 == 0:
-                        self.pieces[i][j].set_x(start_x + j * 75)
-                        self.pieces[i][j].set_y(start_y + i * 75)
-                    else:
-                        self.pieces[i][j].set_x(start_x + j * 75 + 37.5)
-                        self.pieces[i][j].set_y(start_y + i * 75)
+                if i % 2 == 0:
+                    self.pieces[i][j].set_x(start_x + j * 75)
+                    self.pieces[i][j].set_y(start_y + i * 75)
                 else:
-                    if i % 2 == 0:
-                        self.pieces[i][j] = Piece(
-                            0, start_x + j * 75, start_y + i * 75, "assets/piece.png")
-                    else:
-                        self.pieces[i][j] = Piece(
-                            0, start_x + j * 75 + 37.5, start_y + i * 75, "assets/piece.png")
+                    self.pieces[i][j].set_x(start_x + j * 75 + 37.5)
+                    self.pieces[i][j].set_y(start_y + i * 75)
 
                 self.screen.blit(
                     self.pieces[i][j].image, (self.pieces[i][j].x, self.pieces[i][j].y))
@@ -43,12 +37,14 @@ class TablePlayer:
     def make_move(self, x, y):
         """
         Make a move.
-        :return: None
+        :return: True if the move was made, False otherwise.
         """
         for row in self.pieces:
             for piece in row:
                 if piece.check_click(x, y):
                     piece.set_value(1)
+                    return True
+        return False
 
     def make_piece_mouse(self, mouse):
         """
@@ -58,3 +54,14 @@ class TablePlayer:
         """
         self.pieces[mouse.y][mouse.x] = Piece(
             2, mouse.x, mouse.y, "assets/mouse.png")
+
+    def add_random_blocked_pieces(self):
+        """
+        Add random blocked pieces to the board.
+        :return: None
+        """
+        for i in range(self.height):
+            for j in range(self.width):
+                random_number_to_devide = random.randint(0, (i + j) + 1) + 1
+                if random_number_to_devide % random.randint(2, 9) == 0:
+                    self.pieces[i][j].set_value(1)
