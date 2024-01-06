@@ -4,51 +4,53 @@ class MousePlayer:
         self.y = y
 
     def make_move(self, board):
-        pass
+        old_x = self.x
+        old_y = self.y
+        self.y, self.x = self.bfs(board)
+        board[old_y][old_x].set_value(0)
+        board[self.y][self.x].set_value(2)
+        print()
+        print("Mouse moved to: ", self.y, self.x)
+        for row in board:
+            for piece in row:
+                print(piece.value, end=" ")
+            print()
+        return self.y, self.x
 
-    def in_bounds(self, y, x):
-        return 0 <= y < 5 and 0 <= x < 9
+    def in_bounds(self, y, x, board):
+        return 0 <= y < len(board) and 0 <= x < len(board[0])
 
-    def bfs(self):
-
-        board = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 0, 1, 1, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 0, 1]
-        ]
-
-        self.x = 7
-        self.y = 1
-
-        start_cell = (self.y, self.x)
-        neighbors = [[start_cell, None]]
-        visited = {}
+    def bfs(self, board):
         directions = [
-            [0, 1],
-            [0, -1],
-            [1, 0],
-            [-1, 0],
-            [1, 1],
-            [-1, -1],
-            [1, -1],
-            [-1, 1],
+            [0, 1],     # Right
+            [0, -1],    # Left
+            [1, 0],     # Down
+            [-1, 0],    # Up
+            [-1, -1],   # Up Left
+            [1, -1],    # Down Left
         ]
 
-        while neighbors:
-            current = neighbors.pop(0)
-            visited.update({current[0]: current[1]})
-            current = current[0]
-            last_cell = current
+        queue = [(self.y, self.x)]
+        visited = {}
+        visited[(self.y, self.x)] = None
+
+        while queue:
+            y, x = queue.pop(0)
+
             for direction in directions:
-                new_y = current[0] + direction[0]
-                new_x = current[1] + direction[1]
-                if self.in_bounds(new_y, new_x):
-                    if board[new_y][new_x] == 0 and (new_y, new_x) not in visited:
-                        neighbors.append([(new_y, new_x), last_cell])
-                elif not self.in_bounds(new_y, new_x) and board[current[0]][current[1]] == 0:
-                    cell = last_cell
-                    while visited[visited[cell]] is not None:
-                        cell = visited[cell]
-                    return cell
+                new_y = y + direction[0]
+                new_x = x + direction[1]
+
+                if self.in_bounds(new_y, new_x, board) and (new_y, new_x) not in visited and board[new_y][new_x].value == 0:
+                    visited[(new_y, new_x)] = (y, x)
+                    queue.append((new_y, new_x))
+                elif not self.in_bounds(new_y, new_x, board):
+                    return self.backtrack((y, x), visited)
+
+    def backtrack(self, end, visited):
+        path = []
+        current = end
+        while current is not None:
+            path.append(current)
+            current = visited[current]
+        return path[-2][0], path[-2][1]

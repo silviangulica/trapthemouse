@@ -2,6 +2,7 @@ import pygame
 
 from button import Button
 from tableplayer import TablePlayer
+from mouseplayer import MousePlayer
 
 
 class Game:
@@ -69,7 +70,9 @@ class Game:
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
         tableplayer = TablePlayer(self.screen, 8, 9)
+        mouseplayer = MousePlayer(2, 3)
 
+        tableplayer.make_piece_mouse(mouseplayer)
         TABLE_PLAYER = True
         MOUSE_PLAYER = False
         player_to_move = TABLE_PLAYER
@@ -89,9 +92,7 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if player_to_move:
                         tableplayer.make_move(mouse_pos[0], mouse_pos[1])
-                        player_to_move = TABLE_PLAYER
-                    else:
-                        pass
+                        mouseplayer.make_move(tableplayer.pieces)
 
             pygame.display.update()
             self.clock.tick(60)

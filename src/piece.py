@@ -10,6 +10,12 @@ class Piece:
 
     def set_value(self, value):
         self.value = value
+        if self.value == 0:
+            self.image = pygame.image.load("assets/piece.png")
+        elif self.value == 2:
+            self.image = pygame.image.load("assets/mouse.png")
+        elif self.value == 1:
+            self.image = pygame.image.load("assets/blocked-piece.png")
 
     def set_x(self, x):
         self.x = x

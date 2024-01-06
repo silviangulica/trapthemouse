@@ -37,9 +37,8 @@ class TablePlayer:
                         self.pieces[i][j] = Piece(
                             0, start_x + j * 75 + 37.5, start_y + i * 75, "assets/piece.png")
 
-                if self.pieces[i][j].value == 0:
-                    self.screen.blit(self.pieces[i][j].image,
-                                     (self.pieces[i][j].x, self.pieces[i][j].y))
+                self.screen.blit(
+                    self.pieces[i][j].image, (self.pieces[i][j].x, self.pieces[i][j].y))
 
     def make_move(self, x, y):
         """
@@ -50,3 +49,12 @@ class TablePlayer:
             for piece in row:
                 if piece.check_click(x, y):
                     piece.set_value(1)
+
+    def make_piece_mouse(self, mouse):
+        """
+        Make a piece for the mouse.
+        :param mouse: The mouse to make the piece for.
+        :return: None
+        """
+        self.pieces[mouse.y][mouse.x] = Piece(
+            2, mouse.x, mouse.y, "assets/mouse.png")
