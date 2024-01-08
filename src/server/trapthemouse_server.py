@@ -44,15 +44,28 @@ def threaded_client(conn, player_id):
                 if data[0] == "make_game":
                     games[player_id] = OnlineGame(
                         game_id=player_id,
-                        player1=player_id,
+                        player1=conn,
                         player2=None,
                         game_type=data[1]
                     )
-                    reply = "game_created"
-                    conn.sendall(str.encode(reply))
                     conn.sendall(pickle.dumps(games[player_id].table))
                 elif data[0] == "join_game":
-                    pass
+                    game_id = int(data[1])
+                    if game_id in games:
+                        games[game_id].player2 = conn
+                        # games[game_id].start_game()
+                        conn.sendall(pickle.dumps(games[game_id].table))
+                    else:
+                        # TODO: trebuie de facut o comanda custom
+                        conn.sendall(pickle.dumps(False))
+                elif data[0] == "move":
+                    game_id = int(data[1])
+                    if game_id in games:
+                        games[game_id].make_move(
+                            player_id, int(data[2]), int(data[3]))
+                        conn.sendall(pickle.dumps(games[game_id].table))
+                    else:
+                        pass # Trebuie de refacut
             else:
                 break
         except:

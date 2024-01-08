@@ -188,10 +188,14 @@ class Game:
 
         button_create_game = Button(self.screen, 50, 250, 200, 100, "Create Game",
                                     pygame.font.SysFont("Arial", 20), True, False)
-        button_back = Button(self.screen, 50, 400, 200, 100, "Back",
+
+        button_connect_game = Button(self.screen, 50, 400, 200, 100, "Connect Game",
+                                     pygame.font.SysFont("Arial", 20), True, False)
+
+        button_back = Button(self.screen, 50, 550, 200, 100, "Back",
                              pygame.font.SysFont("Arial", 20), True, False)
 
-        menu_buttons = [button_create_game, button_back]
+        menu_buttons = [button_create_game, button_back, button_connect_game]
 
         while True:
             mouse_pos = pygame.mouse.get_pos()
@@ -211,16 +215,40 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         if button_create_game.check_click(mouse_pos[0], mouse_pos[1]):
-                            # All the game logic and different game screens
+                            # conn to server , debug onl
                             data = network.send("make_game:table")
-                            if data == "game_created":
-                                data = network.recv()
+                            if data:
                                 self.start_online_game(network, data)
                         elif button_back.check_click(mouse_pos[0], mouse_pos[1]):
                             return
+                        elif button_connect_game.check_click(mouse_pos[0], mouse_pos[1]):
+                            # conn to server , debug onl, ID 0
+                            data = network.send("join_game:0")
+                            if data:
+                                self.start_online_game(network, data)
 
             pygame.display.update()
             self.clock.tick(60)
 
     def start_online_game(self, network, data):
         online_player = OnlinePlayer(self.screen, network, data)
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+        while True:
+            mouse_pos = pygame.mouse.get_pos()
+            events = pygame.event.get()
+
+            self.screen.fill((157, 204, 158))
+
+            online_player.draw()
+
+            for event in events:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        online_player.make_move(mouse_pos[0], mouse_pos[1])
+
+            pygame.display.update()
+            self.clock.tick(60)

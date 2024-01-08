@@ -30,11 +30,6 @@ class Network:
         try:
             self.client.send(str.encode(data))
             return pickle.loads(self.client.recv(2048))
-        except socket.error as e:
-            print(e)
-
-    def recv(self):
-        try:
-            return pickle.loads(self.client.recv(2048))
+            # return self.client.recv(2048).decode()
         except socket.error as e:
             print(e)

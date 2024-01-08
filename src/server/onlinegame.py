@@ -4,4 +4,7 @@ class OnlineGame:
         self.player1 = player1
         self.player2 = player2
         self.game_type = game_type
-        self.table = [[0 for _ in range(9)] for _ in range(8)]
+        self.width = 8
+        self.height = 9
+        self.table = [[0 for _ in range(self.width)]
+                      for _ in range(self.height)]

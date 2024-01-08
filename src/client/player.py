@@ -8,8 +8,8 @@ class Player:
     """
 
     def __init__(self, screen):
-        self.height = 8
-        self.width = 9
+        self.height = 9
+        self.width = 8
         self.screen = screen
         self.pieces = [[Piece(0, 0, 0, "assets/piece.png")
                         for _ in range(self.width)] for _ in range(self.height)]
