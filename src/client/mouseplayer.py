@@ -89,15 +89,16 @@ class MousePlayer:
                     visited[(new_y, new_x)] = (y, x)
                     queue.append((new_y, new_x))
                 elif not self.in_bounds(new_y, new_x, board):
-                    return self.backtrack((y, x), visited)
+                    return self.backtrack((y, x), visited, 1)
 
-        return self.backtrack((y, x), visited)
+        return self.backtrack((y, x), visited, 2)
 
-    def backtrack(self, end, visited):
+    def backtrack(self, end, visited, called_from=0):
         """
         Backtracks from the end position to the second last position. So that the mouse can know where to go.
         :param end: The end position
         :param visited: The visited dictionary
+        :param called_from: Default is 0. If needed, it can be set for a specific value that will represent moment of the BFS when is called. 1. From a position where mouse can escape. 2. From a position where mouse is trapped.
         :return: The (y, x) index of the cell that the mouse should move.
         """
         path = []
@@ -107,7 +108,9 @@ class MousePlayer:
             current = visited[current]
 
         if len(path) == 1:
-            if path[0][0] == self.y and path[0][1] == self.x:
+            if called_from == 1:
+                return -1, -1
+            elif called_from == 2:
                 return self.y, self.x
-            return -1, -1
+
         return path[-2][0], path[-2][1]

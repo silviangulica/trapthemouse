@@ -3,6 +3,10 @@ import pygame
 from button import Button
 from mouseplayer import MousePlayer
 from tableplayer import TablePlayer
+from network import Network
+from onlineplayer import OnlinePlayer
+
+from _thread import *
 
 
 class Game:
@@ -30,12 +34,14 @@ class Game:
         The main menu for the game. TODO CONTINUE
         :return:
         """
+        button_online_game = Button(self.screen, 50, 250, 200, 100, "Online Game",
+                                    pygame.font.SysFont("Arial", 20), True, False)
         button_start_game = Button(self.screen, 50, 400, 200, 100, "Start Game",
                                    pygame.font.SysFont("Arial", 20), True, False)
         button_quit = Button(self.screen, 50, 550, 200, 100, "Quit",
                              pygame.font.SysFont("Arial", 20), True, False)
 
-        menu_buttons = [button_start_game, button_quit]
+        menu_buttons = [button_start_game, button_quit, button_online_game]
 
         title_font = pygame.font.Font("freesansbold.ttf", 46)
         title_rect = title_font.render(
@@ -66,9 +72,11 @@ class Game:
                             # All the game logic and different game screens
                             winner = self.start_local_game()
                             self.display_winner_info(winner)
-                        if button_quit.check_click(mouse_pos[0], mouse_pos[1]):
+                        elif button_quit.check_click(mouse_pos[0], mouse_pos[1]):
                             pygame.quit()
                             quit()
+                        elif button_online_game.check_click(mouse_pos[0], mouse_pos[1]):
+                            self.online_menu()
 
             pygame.display.update()
             self.clock.tick(60)
@@ -83,7 +91,7 @@ class Game:
 
         game_end = False
 
-        tableplayer = TablePlayer(self.screen, 8, 9)
+        tableplayer = TablePlayer(self.screen)
         tableplayer.add_random_blocked_pieces()
         mouseplayer = MousePlayer(4, 4)
 
@@ -164,3 +172,55 @@ class Game:
 
             pygame.display.update()
             self.clock.tick(60)
+
+    def online_menu(self):
+        """
+        Start an online game with the default configuration.
+        :return: None
+        """
+
+        network = Network()
+        connection_status = network.connect()
+
+        if connection_status != "conn":
+            print("Error connecting to the server.")
+            return
+
+        button_create_game = Button(self.screen, 50, 250, 200, 100, "Create Game",
+                                    pygame.font.SysFont("Arial", 20), True, False)
+        button_back = Button(self.screen, 50, 400, 200, 100, "Back",
+                             pygame.font.SysFont("Arial", 20), True, False)
+
+        menu_buttons = [button_create_game, button_back]
+
+        while True:
+            mouse_pos = pygame.mouse.get_pos()
+            events = pygame.event.get()
+
+            self.screen.fill((157, 204, 158))
+
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+            for button in menu_buttons:
+                button.draw()
+                button.check_hover(mouse_pos[0], mouse_pos[1])
+
+            for event in events:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        if button_create_game.check_click(mouse_pos[0], mouse_pos[1]):
+                            # All the game logic and different game screens
+                            data = network.send("make_game:table")
+                            if data == "game_created":
+                                data = network.recv()
+                                self.start_online_game(network, data)
+                        elif button_back.check_click(mouse_pos[0], mouse_pos[1]):
+                            return
+
+            pygame.display.update()
+            self.clock.tick(60)
+
+    def start_online_game(self, network, data):
+        online_player = OnlinePlayer(self.screen, network, data)
