@@ -1,12 +1,12 @@
 import pygame
-
+import pygame_gui
 from button import Button
 from mouseplayer import MousePlayer
 from tableplayer import TablePlayer
 from network import Network
 from onlineplayer import OnlinePlayer
 
-from _thread import *
+from threading import Thread
 
 
 class Game:
@@ -17,6 +17,8 @@ class Game:
 
     def __init__(self):
         self.screen = None
+        self.manager = None
+        self.text_input = None
         self.clock = pygame.time.Clock()
 
     def initialize_game(self):
@@ -25,9 +27,12 @@ class Game:
         :return: None
         """
         self.screen = pygame.display.set_mode(
-            (1024, 720), pygame.RESIZABLE, pygame.SRCALPHA)
+            (1024, 720))
         pygame.init()
+        self.manager = pygame_gui.UIManager((1024, 720))
         pygame.display.set_caption("Trap The Mouse")
+        self.text_input = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect(
+            (300, 400), (200, 50)), manager=self.manager, object_id="#game_id")
 
     def main_menu(self):
         """
@@ -195,13 +200,25 @@ class Game:
         button_back = Button(self.screen, 50, 550, 200, 100, "Back",
                              pygame.font.SysFont("Arial", 20), True, False)
 
-        menu_buttons = [button_create_game, button_back, button_connect_game]
+        button_set_game_id = Button(self.screen, 300, 250, 200, 100, "Set Game ID",
+                                    pygame.font.SysFont("Arial", 20), True, False)
 
+        menu_buttons = [button_create_game, button_back,
+                        button_connect_game, button_set_game_id]
+
+        winner = ""
+        game_id = 0
+
+        game_id_font = pygame.font.Font("freesansbold.ttf", 20)
         while True:
             mouse_pos = pygame.mouse.get_pos()
             events = pygame.event.get()
 
             self.screen.fill((157, 204, 158))
+
+            game_id_text = game_id_font.render(
+                f"Game ID:{game_id}", True, (0, 0, 0))
+            self.screen.blit(game_id_text, (300, 400))
 
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
             for button in menu_buttons:
@@ -215,32 +232,82 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         if button_create_game.check_click(mouse_pos[0], mouse_pos[1]):
-                            # conn to server , debug onl
-                            data = network.send("make_game:table")
+                            data = network.send("make_game:")
                             if data:
-                                self.start_online_game(network, data)
+                                winner = self.start_online_game(network, data)
                         elif button_back.check_click(mouse_pos[0], mouse_pos[1]):
                             return
                         elif button_connect_game.check_click(mouse_pos[0], mouse_pos[1]):
-                            # conn to server , debug onl, ID 0
-                            data = network.send("join_game:0")
+                            data = network.send(f"join_game:{game_id}")
                             if data:
-                                self.start_online_game(network, data)
+                                winner = self.start_online_game(network, data)
+                        elif button_set_game_id.check_click(mouse_pos[0], mouse_pos[1]):
+                            game_id = self.get_game_id_from_input()
 
+            if winner != "":
+                self.display_winner_info(winner)
+                return
             pygame.display.update()
             self.clock.tick(60)
 
+    def get_game_id_from_input(self):
+        game_id = 0
+        stop = False
+        while not stop:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+
+                if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
+                    if event.ui_element == self.text_input:
+                        try:
+                            game_id = int(self.text_input.text)
+                            stop = True
+                        except:
+                            pass
+
+                self.manager.process_events(event)
+
+            self.manager.update(1 / 60.0)
+            self.manager.draw_ui(self.screen)
+            pygame.display.update()
+            self.clock.tick(60)
+
+        return game_id
+
     def start_online_game(self, network, data):
-        online_player = OnlinePlayer(self.screen, network, data)
+        online_player = OnlinePlayer(self.screen, network, data["table"])
+        quit_button = Button(self.screen, 50, 550, 200, 100, "Quit",
+                             pygame.font.SysFont("Arial", 20), True, False)
+
+        game_id_font = pygame.font.Font("freesansbold.ttf", 20)
+        game_id_text = game_id_font.render(
+            f"Game ID:{data['game_id']}", True, (0, 0, 0))
+
+        buttons = [quit_button]
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
+        text_turn_font = pygame.font.Font("freesansbold.ttf", 20)
+
         while True:
+            online_player.check_online_table_and_win_status()
             mouse_pos = pygame.mouse.get_pos()
             events = pygame.event.get()
 
             self.screen.fill((157, 204, 158))
 
+            self.text_turn = "Your turn" if online_player.my_turn else "Opponent's turn"
+            text_turn = text_turn_font.render(
+                self.text_turn, True, (0, 0, 0))
+            self.screen.blit(text_turn, (50, 100))
+            self.screen.blit(game_id_text, (50, 50))
             online_player.draw()
+
+            for button in buttons:
+                button.draw()
+                button.check_hover(mouse_pos[0], mouse_pos[1])
 
             for event in events:
                 if event.type == pygame.QUIT:
@@ -249,6 +316,13 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         online_player.make_move(mouse_pos[0], mouse_pos[1])
+                        if quit_button.check_click(mouse_pos[0], mouse_pos[1]):
+                            return
 
             pygame.display.update()
             self.clock.tick(60)
+
+            if online_player.game_won:
+                break
+
+        return online_player.winner

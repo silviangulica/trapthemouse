@@ -33,3 +33,12 @@ class Network:
             # return self.client.recv(2048).decode()
         except socket.error as e:
             print(e)
+
+    def send_without_response(self, data):
+        try:
+            self.client.send(str.encode(data))
+        except socket.error as e:
+            print(e)
+
+    def close(self):
+        self.client.close()
