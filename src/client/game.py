@@ -20,6 +20,8 @@ class Game:
         self.manager = None
         self.text_input = None
         self.clock = pygame.time.Clock()
+        self.title_rect = None
+        self.difficulty = 0
 
     def initialize_game(self):
         """
@@ -33,6 +35,14 @@ class Game:
         pygame.display.set_caption("Trap The Mouse")
         self.text_input = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect(
             (300, 400), (200, 50)), manager=self.manager, object_id="#game_id")
+        self.title_font = pygame.font.Font("freesansbold.ttf", 46)
+        self.title_rect = self.title_font.render(
+            f"Trap The Mouse", True, (0, 0, 0))
+
+    def display_title(self):
+        self.screen.blit(self.title_rect,
+                         ((self.screen.get_width() - self.title_rect.get_width()) / 2,
+                          self.title_rect.get_height() + 50))
 
     def main_menu(self):
         """
@@ -45,12 +55,11 @@ class Game:
                                    pygame.font.SysFont("Arial", 20), True, False)
         button_quit = Button(self.screen, 50, 550, 200, 100, "Quit",
                              pygame.font.SysFont("Arial", 20), True, False)
+        difficulty_button = Button(self.screen, 300, 400, 200, 100,
+                                   "Difficulty: Easy", pygame.font.SysFont("Arial", 20), True, False)
 
-        menu_buttons = [button_start_game, button_quit, button_online_game]
-
-        title_font = pygame.font.Font("freesansbold.ttf", 46)
-        title_rect = title_font.render(
-            f"Trap The Mouse", True, (0, 0, 0))
+        menu_buttons = [button_start_game, button_quit,
+                        button_online_game, difficulty_button]
 
         while True:
             mouse_pos = pygame.mouse.get_pos()
@@ -58,9 +67,7 @@ class Game:
 
             self.screen.fill((68, 117, 28))
 
-            self.screen.blit(title_rect,
-                             ((self.screen.get_width() - title_rect.get_width()) / 2,
-                              title_rect.get_height() + 50))
+            self.display_title()
 
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
             for button in menu_buttons:
@@ -82,6 +89,14 @@ class Game:
                             quit()
                         elif button_online_game.check_click(mouse_pos[0], mouse_pos[1]):
                             self.online_menu()
+                        elif difficulty_button.check_click(mouse_pos[0], mouse_pos[1]):
+                            self.difficulty = (self.difficulty + 1) % 3
+                            if self.difficulty == 0:
+                                difficulty_button.text = "Difficulty: Easy"
+                            elif self.difficulty == 1:
+                                difficulty_button.text = "Difficulty: Medium"
+                            elif self.difficulty == 2:
+                                difficulty_button.text = "Difficulty: Hard"
 
             pygame.display.update()
             self.clock.tick(60)
@@ -96,7 +111,7 @@ class Game:
 
         game_end = False
 
-        tableplayer = TablePlayer(self.screen)
+        tableplayer = TablePlayer(self.screen, self.difficulty)
         tableplayer.add_random_blocked_pieces()
         mouseplayer = MousePlayer(4, 4)
 
@@ -210,15 +225,23 @@ class Game:
         game_id = 0
 
         game_id_font = pygame.font.Font("freesansbold.ttf", 20)
+        menu_info_font = pygame.font.Font("freesansbold.ttf", 20)
+        menu_info_text = menu_info_font.render(
+            f"\nGame ID -> Enter the game ID by typing the ID of the \n   game you want to play, confirm by pressing Enter.", True, (0, 0, 0))
+
         while True:
             mouse_pos = pygame.mouse.get_pos()
             events = pygame.event.get()
 
             self.screen.fill((157, 204, 158))
 
+            self.display_title()
+
             game_id_text = game_id_font.render(
-                f"Game ID:{game_id}", True, (0, 0, 0))
+                f"Game to connect:{game_id}", True, (0, 0, 0))
+
             self.screen.blit(game_id_text, (300, 400))
+            self.screen.blit(menu_info_text, (300, 450))
 
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
             for button in menu_buttons:
@@ -244,7 +267,9 @@ class Game:
                         elif button_set_game_id.check_click(mouse_pos[0], mouse_pos[1]):
                             game_id = self.get_game_id_from_input()
 
-            if winner != "":
+            if winner == None:
+                return
+            elif winner != "":
                 self.display_winner_info(winner)
                 return
             pygame.display.update()

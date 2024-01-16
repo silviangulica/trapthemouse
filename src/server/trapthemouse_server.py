@@ -22,13 +22,6 @@ games = {}
 available_id = 0
 players = {}
 
-'''
-    Protocul UBRA:
-    - make_game:
-    - join_game:game_id
-    - move:y:x
-'''
-
 
 def find_game(player):
     for game in games:
@@ -142,6 +135,7 @@ while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
 
+    destroy_empty_games()
     if available_id in players:
         available_id += 1
     player_id = available_id

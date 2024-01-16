@@ -24,6 +24,16 @@ class OnlineGame:
         random_y = random.randint(4, self.height - 3)
         self.table[random_y][random_x] = 2
 
+        # place random pieces on the table
+        random_pieces = random.randint(10, 15)
+        for i in range(random_pieces):
+            while True:
+                random_x = random.randint(0, self.width - 1)
+                random_y = random.randint(0, self.height - 1)
+                if self.table[random_y][random_x] == 0:
+                    self.table[random_y][random_x] = 1
+                    break
+
     def make_move(self, player, y, x):
         if self.game_started and self.table[y][x] == 0:
             if self.player_to_move == self.player1 and player == self.player1:

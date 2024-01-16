@@ -4,8 +4,9 @@ from player import Player
 
 
 class TablePlayer(Player):
-    def __init__(self, screen):
+    def __init__(self, screen, difficulty):
         super().__init__(screen)
+        self.difficulty = difficulty + 1
 
     def make_piece_mouse(self, mouse):
         """
@@ -21,8 +22,12 @@ class TablePlayer(Player):
         Add random blocked pieces to the board.
         :return: None
         """
-        for i in range(self.height):
-            for j in range(self.width):
-                random_number_to_devide = random.randint(0, (i + j) + 1) + 1
-                if random_number_to_devide % random.randint(2, 9) == 0:
-                    self.pieces[i][j].set_value(1)
+        random_pieces = random.randint(
+            int(10 / self.difficulty), int(15 / self.difficulty))
+        for i in range(random_pieces):
+            while True:
+                random_x = random.randint(0, self.width - 1)
+                random_y = random.randint(0, self.height - 1)
+                if self.pieces[random_y][random_x].value == 0:
+                    self.pieces[random_y][random_x].set_value(1)
+                    break
