@@ -20,6 +20,10 @@ class Network:
         self.addr = (self.server, self.port)
 
     def connect(self):
+        """
+        Connects to the server.
+        :return: The validation message form the server.
+        """
         try:
             self.client.connect(self.addr)
             return self.client.recv(2048).decode()
@@ -27,18 +31,32 @@ class Network:
             print(e)
 
     def send(self, data):
+        """
+        Sends data to the server. After sending the data, the network will wait for a ressponse.
+        :param data: The data to be sent.
+        :return: The response from the server, usually an object.
+        """
         try:
             self.client.send(str.encode(data))
             return pickle.loads(self.client.recv(2048))
-            # return self.client.recv(2048).decode()
+            # return self.client.recv(2048).decode() DEBUG ONLY
         except socket.error as e:
             print(e)
 
     def send_without_response(self, data):
+        """
+        Sends data to the server. In this case, the network will not wait for a response from the server.
+        :param data: The data to be sent.
+        :return: None
+        """
         try:
             self.client.send(str.encode(data))
         except socket.error as e:
             print(e)
 
     def close(self):
+        """
+        Closes the connection with the server.
+        :return: None
+        """
         self.client.close()

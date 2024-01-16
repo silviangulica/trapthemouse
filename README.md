@@ -11,6 +11,12 @@ A simple game made with pygame for my school project.
     python3 src/server/trapthemouse_server.py
 ```
 
+# Version 1
+
+- The game now contains more information about how to play multiplayer
+- Tha game is now fully functional and playable, bug free (at least I hope so)
+- The code is now more readable and more structured with pep docstrings
+
 # Version 0.9
 
 - Simple multyplayer is working and fully functional

@@ -12,10 +12,11 @@ try:
     s.bind((server, port))
 except socket.error as e:
     print(e)
+    quit()
 
 s.listen(2)
 
-print("Waiting for a connection, Server Started")
+print("==> TRAP THE MOUSE server started! Waiting for connections...")
 
 
 games = {}
@@ -24,6 +25,11 @@ players = {}
 
 
 def find_game(player):
+    """
+    Finds the game that the player is in.
+    :param player: The player to find the game for.
+    :return: The game that the player is in.
+    """
     for game in games:
         if games[game].player1 == player or games[game].player2 == player:
             return games[game]
@@ -31,33 +37,50 @@ def find_game(player):
 
 
 def disconnect_player_from_game(player, game):
+    """
+    Disconnects the player from the game.
+    :param player: The player to be disconnected.
+    :param game: The game to disconnect the player from.
+    :return: None
+    """
     if game.player1 == player:
         game.player1 = None
     else:
         game.player2 = None
 
 
-def destroy_empty_games():
-    global games
-    for game in games:
-        if games[game].player1 == None and games[game].player2 == None:
-            del games[game]
-            print(f"Game {game} deleted")
-            print(games)
-            break
+def destroy_empty_game(game):
+    """
+    Destroys the game if it is empty.
+    :param game: The game to be destroyed.
+    :return: None
+    """
+    if game.player1 == None and game.player2 == None:
+        del games[game.game_id]
 
 
 def game_is_not_full_but_started(game):
+    """
+    Checks if the game is not full but started.
+    :param game: The game to be checked.
+    :return: True if the game is not full but started, False otherwise.
+    """
+
     return (game.player1 == None or game.player2 == None) and game.game_started
 
 
 def threaded_client(conn, player_id):
+    """
+    This method will handle the connection to the client, and will handle the game creation, joining and playing.
+    :param conn: The connection to the client.
+    :param player_id: The id of the player.
+    :return: None
+    """
     global games
     global players
     global available_id
     conn.send(str.encode("conn"))
-    stop_connection = False
-    while not stop_connection:
+    while True:
         try:
             data = conn.recv(2048).decode()
             if data:
@@ -74,6 +97,7 @@ def threaded_client(conn, player_id):
                         "table": games[player_id].table
                     }
                     conn.sendall(pickle.dumps(reply))
+
                 elif data[0] == "join_game":
                     game_id = int(data[1])
                     if game_id in games:
@@ -100,7 +124,7 @@ def threaded_client(conn, player_id):
                     game = find_game(conn)
                     if game:
                         if game_is_not_full_but_started(game):
-                            game.end_game(conn)
+                            game.end_game(conn, "YOU")
                         reply = {
                             "table": game.table,
                             "game_won": game.game_won,
@@ -110,10 +134,6 @@ def threaded_client(conn, player_id):
 
                         conn.sendall(pickle.dumps(reply))
 
-                        if game.game_won:
-                            disconnect_player_from_game(conn, game)
-                            destroy_empty_games()
-                            break
                     else:
                         conn.sendall(pickle.dumps(None))
 
@@ -125,17 +145,17 @@ def threaded_client(conn, player_id):
     game = find_game(conn)
     if game:
         disconnect_player_from_game(conn, game)
+        destroy_empty_game(game)
     conn.close()
     del players[player_id]
     print(f"Player {player_id} disconnected")
-    available_id = player_id if available_id > player_id else player_id
+    available_id = player_id
 
 
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
 
-    destroy_empty_games()
     if available_id in players:
         available_id += 1
     player_id = available_id

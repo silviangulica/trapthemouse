@@ -8,6 +8,10 @@ class Player:
     """
 
     def __init__(self, screen):
+        """
+        Initializes the player.
+        :param screen: The screen to draw on.
+        """
         self.height = 9
         self.width = 8
         self.screen = screen

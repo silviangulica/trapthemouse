@@ -6,8 +6,6 @@ from tableplayer import TablePlayer
 from network import Network
 from onlineplayer import OnlinePlayer
 
-from threading import Thread
-
 
 class Game:
     """
@@ -40,14 +38,18 @@ class Game:
             f"Trap The Mouse", True, (0, 0, 0))
 
     def display_title(self):
+        """
+        Display the title of the game.
+        :return: None
+        """
         self.screen.blit(self.title_rect,
                          ((self.screen.get_width() - self.title_rect.get_width()) / 2,
                           self.title_rect.get_height() + 50))
 
     def main_menu(self):
         """
-        The main menu for the game. TODO CONTINUE
-        :return:
+        The screen for main menu. It will display buttons for the user to choose.
+        :return: None
         """
         button_online_game = Button(self.screen, 50, 250, 200, 100, "Online Game",
                                     pygame.font.SysFont("Arial", 20), True, False)
@@ -83,7 +85,8 @@ class Game:
                         if button_start_game.check_click(mouse_pos[0], mouse_pos[1]):
                             # All the game logic and different game screens
                             winner = self.start_local_game()
-                            self.display_winner_info(winner)
+                            if winner != "quit":
+                                self.display_winner_info(winner)
                         elif button_quit.check_click(mouse_pos[0], mouse_pos[1]):
                             pygame.quit()
                             quit()
@@ -109,6 +112,11 @@ class Game:
         # When changing the windows, the cursor need to be reset
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
 
+        quit_button = Button(self.screen, 50, 550, 200, 100, "Quit",
+                             pygame.font.SysFont("Arial", 20), True, False)
+
+        buttons = [quit_button]
+
         game_end = False
 
         tableplayer = TablePlayer(self.screen, self.difficulty)
@@ -128,6 +136,10 @@ class Game:
             winner = "none"
 
             tableplayer.draw()
+
+            for button in buttons:
+                button.draw()
+                button.check_hover(mouse_pos[0], mouse_pos[1])
 
             for event in events:
                 if event.type == pygame.QUIT:
@@ -149,6 +161,8 @@ class Game:
                                 game_end = True
                                 winner = "table"
                             player_to_move = table_player
+                        if quit_button.check_click(mouse_pos[0], mouse_pos[1]):
+                            return "quit"
 
                     # Debug only
                     elif event.button == 3:
@@ -160,6 +174,11 @@ class Game:
         return winner
 
     def display_winner_info(self, winner):
+        """
+        Display the winner information.
+        :param winner: The winner of the game.
+        :return: None
+        """
         background = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
         background.fill((175, 222, 166, 175))
         self.screen.blit(background, (0, 0))
@@ -272,10 +291,15 @@ class Game:
             elif winner != "":
                 self.display_winner_info(winner)
                 return
+
             pygame.display.update()
             self.clock.tick(60)
 
     def get_game_id_from_input(self):
+        """
+        Get the game id from the input box via the UI (PyGame UI).
+        :return: The game id.
+        """
         game_id = 0
         stop = False
         while not stop:
@@ -303,6 +327,10 @@ class Game:
         return game_id
 
     def start_online_game(self, network, data):
+        """
+        Start an online game with the default configuration.
+        :return: None
+        """
         online_player = OnlinePlayer(self.screen, network, data["table"])
         quit_button = Button(self.screen, 50, 550, 200, 100, "Quit",
                              pygame.font.SysFont("Arial", 20), True, False)

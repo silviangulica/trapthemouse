@@ -4,9 +4,18 @@ from player import Player
 
 
 class TablePlayer(Player):
+    """
+    TablePlayer class. This class will represent a player that will modify the table of the game.
+    """
+
     def __init__(self, screen, difficulty):
+        """
+        Initializes the table player.
+        :param screen: The screen to draw on.
+        :param difficulty: The difficulty of the game, from 0(Easy) to 2(Hard).
+        """
         super().__init__(screen)
-        self.difficulty = difficulty + 1
+        self.difficulty = difficulty
 
     def make_piece_mouse(self, mouse):
         """
@@ -22,8 +31,18 @@ class TablePlayer(Player):
         Add random blocked pieces to the board.
         :return: None
         """
-        random_pieces = random.randint(
-            int(10 / self.difficulty), int(15 / self.difficulty))
+        maximum_pieces = 1
+        minimum_pieces = 1
+        if self.difficulty == 0:
+            maximum_pieces = 25
+            minimum_pieces = 15
+        elif self.difficulty == 1:
+            maximum_pieces = 10
+            minimum_pieces = 5
+        elif self.difficulty == 2:
+            maximum_pieces = 5
+
+        random_pieces = random.randint(minimum_pieces, maximum_pieces)
         for i in range(random_pieces):
             while True:
                 random_x = random.randint(0, self.width - 1)
