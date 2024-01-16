@@ -121,7 +121,7 @@ class Game:
 
         tableplayer = TablePlayer(self.screen, self.difficulty)
         tableplayer.add_random_blocked_pieces()
-        mouseplayer = MousePlayer(4, 4)
+        mouseplayer = MousePlayer(4, 4, self.difficulty)
 
         tableplayer.make_piece_mouse(mouseplayer)
         table_player = True
